@@ -116,7 +116,7 @@ class DekDScraper():
                 _text = re.sub("’", '', _text)
                 _text = re.sub("“", '', _text)
 
-                all_text=all_text+_text.strip()
+                all_text=all_text+'\n'_text.strip()
                 time.sleep(self.delay)
                 
         return all_text
