@@ -39,7 +39,7 @@ class DekDScraper():
             "story_name":"",
             "story_type":"0",
             "writer_name":"",
-            "sort_by":"0",
+            "sort_by":"1",
             "nexttime":"i_warn_u"
         }
         
