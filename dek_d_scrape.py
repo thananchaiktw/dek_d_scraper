@@ -43,8 +43,11 @@ class DekDScraper():
             "nexttime":"i_warn_u"
         }
         
+        self.scraped_id_list = list()
         if not os.path.exists(self.path):
             os.makedirs(self.path)
+        else:
+            self.scraped_id_list = [p[:-5] for p in os.listdir(self.path) if p.endswith('.json')]
             
         resp = requests.get('https://www.dek-d.com/homepage/ajax/writer_query?', params=self.params, headers=headers)
         json_data = json.loads(str(resp.text)[9:])
@@ -71,25 +74,33 @@ class DekDScraper():
                     'text':'',
                 }
                 
-                noval_id = noval['id']
-                writer = noval['writer']
-                title = noval['title']
-                n_chapter = noval['chapter']
-                username = noval['username']
-
-                print("scrape novel name : "+title)
-                text = self.get_novel(noval_id, username, 1)
+                try :
+                    noval_id = noval['id']
+                    writer = noval['writer']
+                    title = noval['title']
+                    n_chapter = noval['chapter']
+                    username = noval['username']
+                    
+                    if str(noval_id) in self.scraped_id_list:
+                        continue
+                    
+                    print("scrape novel name : "+title+", novel id : "+str(noval_id))
+                    text = self.get_novel(noval_id, username, int(n_chapter))
+                    
+                    if len(text) > 0:
+                        w_file = open(os.path.join(self.path, str(noval_id)+'.json'), 'w+')
+                        
+                        self.data['novel_id'] = noval_id
+                        self.data['writer'] = writer
+                        self.data['text'] = text
+                        self.data['title'] = title
+                        
+                        json.dump(self.data, w_file, ensure_ascii=False)
+                        w_file.close()
                 
-                if len(text) > 0:
-                    w_file = open(os.path.join(self.path, str(noval_id)+'.json'), 'w+')
-                    
-                    self.data['novel_id'] = noval_id
-                    self.data['writer'] = writer
-                    self.data['text'] = text
-                    self.data['title'] = title
-                    
-                    json.dump(self.data, w_file, ensure_ascii=False)
-                    w_file.close()
+                except Exception as e :
+                    continue
+                
                     
                 i+=1
                 
@@ -97,6 +108,7 @@ class DekDScraper():
     
     def get_novel(self, novel_id, username, n_chapter):
         all_text = ''
+        
         for c in range(1,n_chapter+1):
             chapter_resp = requests.get('https://writer.dek-d.com/'+username+'/story/viewlongc.php?id='+str(novel_id)+'&chapter='+str(c), headers=headers)
             status_code = chapter_resp.status_code
@@ -131,4 +143,5 @@ if __name__ == "__main__":
     scraper = DekDScraper(args.path, args.sleep)
     print("start scrape")
     scraper.get_data()
+    
     
